@@ -21,24 +21,20 @@ public class DelaunayTriangulation : MonoBehaviour
     {
         simulationScale = maxBound.x;
 
+        // Generate super triangle
         superTriangle = GenerateSuperTriangle(triangleScale, simulationScale, simulationPosition);
 
+        // Generate bounds and add them as points for triangulation
+        var bounds = CreateSimulationBounds(new Vector2(minBound.x, maxBound.x));
+
+        // Generate random points within the bounds
         GeneratePoints();
 
+        // Perform the triangulation
         Triangulate();
+
+        // Draw resulting triangles
         DrawTriangles();
-    }
-
-    private void GeneratePoints()
-    {
-        for (int i = 0; i < maxPointCount; i++)
-        {
-            float x = Random.Range(minBound.x, maxBound.x);
-            float y = Random.Range(minBound.y, maxBound.y);
-
-            Vector2 newPoint = new Vector2(x, y);
-            points.Add(newPoint);
-        }
     }
 
     private Triangle GenerateSuperTriangle(
@@ -72,12 +68,21 @@ public class DelaunayTriangulation : MonoBehaviour
 
     private void Triangulate()
     {
+        // Add the super triangle initially to contain all points
         triangles.Add(superTriangle);
 
+        // Insert each point (including bounds and random points) into the triangulation
         foreach (var point in points)
         {
             InsertPoint(point);
         }
+
+        // Remove triangles that contain any vertex of the super triangle
+        triangles.RemoveAll(triangle =>
+            triangle.Contains(superTriangle.A)
+            || triangle.Contains(superTriangle.B)
+            || triangle.Contains(superTriangle.C)
+        );
     }
 
     private void InsertPoint(Vector2 point)
@@ -124,35 +129,46 @@ public class DelaunayTriangulation : MonoBehaviour
         }
     }
 
-    //for now this is a perfect square
-    private Vector2[] CreateSimulationBounds(Vector2 scalar)
+    // Modify this method to add bounds as points and allow them to be triangulated.
+    private List<Vector2> CreateSimulationBounds(Vector2 scalar)
     {
-        //creates a constant square
-        Vector2[] bounds =
+        List<Vector2> bounds = new List<Vector2>
         {
-            // constant basic square unit (1)
             new Vector2(1, 1),
             new Vector2(-1, 1),
             new Vector2(-1, -1),
             new Vector2(1, -1),
         };
 
-        for (int i = 0; i < bounds.Length; i++)
+        // Scale bounds dynamically and add to points list for triangulation.
+        for (int i = 0; i < bounds.Count; i++)
         {
-            // and just scale the square dynamically here
             bounds[i] *= scalar;
+            points.Add(bounds[i]); // Add bounds directly to points for triangulation
         }
 
         return bounds;
+    }
+
+    private void GeneratePoints()
+    {
+        for (int i = 0; i < maxPointCount; i++)
+        {
+            float x = Random.Range(minBound.x, maxBound.x);
+            float y = Random.Range(minBound.y, maxBound.y);
+
+            Vector2 newPoint = new Vector2(x, y);
+            points.Add(newPoint);
+        }
     }
 
     void DrawTriangles()
     {
         foreach (var triangle in triangles)
         {
-            Vector3 tA = new(triangle.A.x, 0, triangle.A.y);
-            Vector3 tB = new(triangle.B.x, 0, triangle.B.y);
-            Vector3 tC = new(triangle.C.x, 0, triangle.C.y);
+            Vector3 tA = new Vector3(triangle.A.x, 0, triangle.A.y);
+            Vector3 tB = new Vector3(triangle.B.x, 0, triangle.B.y);
+            Vector3 tC = new Vector3(triangle.C.x, 0, triangle.C.y);
 
             Debug.DrawLine(tA, tB, Color.red, 100f);
             Debug.DrawLine(tB, tC, Color.red, 100f);
@@ -160,30 +176,22 @@ public class DelaunayTriangulation : MonoBehaviour
         }
     }
 
-    //for debugging purpose only
+    // Optional debugging to visualize the super triangle and points
     private void OnDrawGizmos()
     {
         if (Application.isPlaying && points != null)
         {
-            //bounds
-            Gizmos.color = Color.green;
-            foreach (Vector2 bound in CreateSimulationBounds(new Vector2(minBound.x, maxBound.x)))
-            {
-                Gizmos.DrawSphere(new Vector3(bound.x, 0, bound.y), 0.2f);
-            }
-
-            //debug super triangle
             Gizmos.color = Color.red;
 
-            Vector3 tA = new(superTriangle.A.x, 0, superTriangle.A.y);
-            Vector3 tB = new(superTriangle.B.x, 0, superTriangle.B.y);
-            Vector3 tC = new(superTriangle.C.x, 0, superTriangle.C.y);
+            Vector3 tA = new Vector3(superTriangle.A.x, 0, superTriangle.A.y);
+            Vector3 tB = new Vector3(superTriangle.B.x, 0, superTriangle.B.y);
+            Vector3 tC = new Vector3(superTriangle.C.x, 0, superTriangle.C.y);
 
             Gizmos.DrawLine(tA, tB);
             Gizmos.DrawLine(tB, tC);
             Gizmos.DrawLine(tC, tA);
 
-            //points within the simulation bound
+            // Visualize points within the simulation bound
             Gizmos.color = Color.red;
             foreach (Vector2 point in points)
             {
