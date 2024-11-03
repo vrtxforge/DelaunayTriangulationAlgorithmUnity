@@ -24,6 +24,9 @@ public class DelaunayTriangulation : MonoBehaviour
         superTriangle = GenerateSuperTriangle(triangleScale, simulationScale, simulationPosition);
 
         GeneratePoints();
+
+        Triangulate();
+        DrawTriangles();
     }
 
     private void GeneratePoints()
@@ -71,13 +74,47 @@ public class DelaunayTriangulation : MonoBehaviour
     {
         triangles.Add(superTriangle);
 
-        //        foreach(var point in points)
-        //        {
-        //
-        //        }
+        foreach (var point in points)
+        {
+            InsertPoint(point);
+        }
     }
 
-    private void InsertPoint(Vector2 point) { }
+    private void InsertPoint(Vector2 point)
+    {
+        List<Triangle> badTriangles = new();
+
+        //find bad triangles (triangles with circumcircle containing points)
+        foreach (var triangle in triangles)
+        {
+            if (triangle.IsPointInCircumcircle(point))
+            {
+                badTriangles.Add(triangle);
+            }
+        }
+
+        //remove bad triangles
+        foreach (var badTriangle in badTriangles)
+        {
+            triangles.Remove(badTriangle);
+        }
+
+        //create new triangles from the point to the edges of the bad triangles
+        HashSet<Edge> edges = new HashSet<Edge>();
+
+        foreach (var badTriangle in badTriangles)
+        {
+            edges.Add(new Edge(badTriangle.A, badTriangle.B));
+            edges.Add(new Edge(badTriangle.B, badTriangle.C));
+            edges.Add(new Edge(badTriangle.C, badTriangle.A));
+        }
+
+        //create new triangles
+        foreach (var edge in edges)
+        {
+            triangles.Add(new Triangle(edge.Start, edge.End, point));
+        }
+    }
 
     //for now this is a perfect square
     private Vector2[] CreateSimulationBounds(Vector2 scalar)
@@ -101,99 +138,114 @@ public class DelaunayTriangulation : MonoBehaviour
         return bounds;
     }
 
-    private class Triangle
+    void DrawTriangles()
     {
-        public Vector2 A { get; }
-        public Vector2 B { get; }
-        public Vector2 C { get; }
-
-        public Triangle(Vector2 a, Vector2 b, Vector2 c)
+        foreach (var triangle in triangles)
         {
-            A = a;
-            B = b;
-            C = c;
-        }
+            Vector3 tA = new(triangle.A.x, 0, triangle.A.y);
+            Vector3 tB = new(triangle.B.x, 0, triangle.B.y);
+            Vector3 tC = new(triangle.C.x, 0, triangle.C.y);
 
-        public bool IsPointInCircumcircle(Vector2 point)
-        {
-            float ax = A.x - point.x;
-            float ay = A.y - point.y;
-
-            float bx = B.x - point.x;
-            float by = B.y - point.y;
-
-            float cx = C.x - point.x;
-            float cy = C.y - point.y;
-
-            float det =
-                (ax * ax + ay * ay) * (bx * cy - by * cx)
-                - (bx * bx + by * by) * (ax * cy - ay * cx)
-                + (cx * cx + cy * cy) * (ax * by - ay * bx);
-
-            return det > 0;
-        }
-
-        public bool Contains(Vector2 point)
-        {
-            return (A == point || B == point || C == point);
-        }
-    }
-
-    public class Edge
-    {
-        public Vector2 Start { get; }
-        public Vector2 End { get; }
-
-        public Edge(Vector2 start, Vector2 end)
-        {
-            Start = start;
-            End = end;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (obj is Edge edge)
-            {
-                return (Start == edge.Start && End == edge.End)
-                    || (Start == edge.End && End == edge.Start);
-            }
-            return false;
-        }
-
-        public override int GetHashCode()
-        {
-            return Start.GetHashCode() * End.GetHashCode();
+            Debug.DrawLine(tA, tB, Color.red, 100f);
+            Debug.DrawLine(tB, tC, Color.red, 100f);
+            Debug.DrawLine(tC, tA, Color.red, 100f);
         }
     }
 
     //for debugging purpose only
     private void OnDrawGizmos()
     {
-        Gizmos.color = Color.green;
-        foreach (Vector2 bound in CreateSimulationBounds(new Vector2(minBound.x, maxBound.x)))
+        if (Application.isPlaying && points != null)
         {
-            Gizmos.DrawSphere(new Vector3(bound.x, 0, bound.y), 0.2f);
+            //bounds
+            Gizmos.color = Color.green;
+            foreach (Vector2 bound in CreateSimulationBounds(new Vector2(minBound.x, maxBound.x)))
+            {
+                Gizmos.DrawSphere(new Vector3(bound.x, 0, bound.y), 0.2f);
+            }
+
+            //debug super triangle
+            Gizmos.color = Color.red;
+
+            Vector3 tA = new(superTriangle.A.x, 0, superTriangle.A.y);
+            Vector3 tB = new(superTriangle.B.x, 0, superTriangle.B.y);
+            Vector3 tC = new(superTriangle.C.x, 0, superTriangle.C.y);
+
+            Gizmos.DrawLine(tA, tB);
+            Gizmos.DrawLine(tB, tC);
+            Gizmos.DrawLine(tC, tA);
+
+            //points within the simulation bound
+            Gizmos.color = Color.red;
+            foreach (Vector2 point in points)
+            {
+                Gizmos.DrawSphere(new Vector3(point.x, 0, point.y), 0.2f);
+            }
         }
+    }
+}
 
-        if (!Application.isPlaying && points == null)
-            return;
+public class Triangle
+{
+    public Vector2 A { get; }
+    public Vector2 B { get; }
+    public Vector2 C { get; }
 
-        Gizmos.color = Color.red;
-        //debug super triangle
+    public Triangle(Vector2 a, Vector2 b, Vector2 c)
+    {
+        A = a;
+        B = b;
+        C = c;
+    }
 
-        Vector3 tA = new(superTriangle.A.x, 0, superTriangle.A.y);
-        Vector3 tB = new(superTriangle.B.x, 0, superTriangle.B.y);
-        Vector3 tC = new(superTriangle.C.x, 0, superTriangle.C.y);
+    public bool IsPointInCircumcircle(Vector2 point)
+    {
+        float ax = A.x - point.x;
+        float ay = A.y - point.y;
 
-        Gizmos.DrawLine(tA, tB);
-        Gizmos.DrawLine(tB, tC);
-        Gizmos.DrawLine(tC, tA);
+        float bx = B.x - point.x;
+        float by = B.y - point.y;
 
-        //points within the simulation bound
-        Gizmos.color = Color.red;
-        foreach (Vector2 point in points)
+        float cx = C.x - point.x;
+        float cy = C.y - point.y;
+
+        float det =
+            (ax * ax + ay * ay) * (bx * cy - by * cx)
+            - (bx * bx + by * by) * (ax * cy - ay * cx)
+            + (cx * cx + cy * cy) * (ax * by - ay * bx);
+
+        return det > 0;
+    }
+
+    public bool Contains(Vector2 point)
+    {
+        return (A == point || B == point || C == point);
+    }
+}
+
+public class Edge
+{
+    public Vector2 Start { get; }
+    public Vector2 End { get; }
+
+    public Edge(Vector2 start, Vector2 end)
+    {
+        Start = start;
+        End = end;
+    }
+
+    public override bool Equals(object obj)
+    {
+        if (obj is Edge edge)
         {
-            Gizmos.DrawSphere(new Vector3(point.x, 0, point.y), 0.2f);
+            return (Start == edge.Start && End == edge.End)
+                || (Start == edge.End && End == edge.Start);
         }
+        return false;
+    }
+
+    public override int GetHashCode()
+    {
+        return Start.GetHashCode() * End.GetHashCode();
     }
 }
