@@ -82,37 +82,45 @@ public class DelaunayTriangulation : MonoBehaviour
 
     private void InsertPoint(Vector2 point)
     {
-        List<Triangle> badTriangles = new();
+        List<Triangle> badTriangles = new List<Triangle>();
+        HashSet<Edge> boundaryEdges = new HashSet<Edge>();
 
-        //find bad triangles (triangles with circumcircle containing points)
+        // Step 1: Find all "bad" triangles whose circumcircles contain the point.
         foreach (var triangle in triangles)
         {
             if (triangle.IsPointInCircumcircle(point))
             {
                 badTriangles.Add(triangle);
+
+                // Add edges of the bad triangle, potentially creating boundary edges
+                AddEdge(boundaryEdges, triangle.A, triangle.B);
+                AddEdge(boundaryEdges, triangle.B, triangle.C);
+                AddEdge(boundaryEdges, triangle.C, triangle.A);
             }
         }
 
-        //remove bad triangles
+        // Step 2: Remove bad triangles from the main list
         foreach (var badTriangle in badTriangles)
         {
             triangles.Remove(badTriangle);
         }
 
-        //create new triangles from the point to the edges of the bad triangles
-        HashSet<Edge> edges = new HashSet<Edge>();
-
-        foreach (var badTriangle in badTriangles)
-        {
-            edges.Add(new Edge(badTriangle.A, badTriangle.B));
-            edges.Add(new Edge(badTriangle.B, badTriangle.C));
-            edges.Add(new Edge(badTriangle.C, badTriangle.A));
-        }
-
-        //create new triangles
-        foreach (var edge in edges)
+        // Step 3: Create new triangles from the point to each boundary edge
+        foreach (var edge in boundaryEdges)
         {
             triangles.Add(new Triangle(edge.Start, edge.End, point));
+        }
+    }
+
+    // Utility method to add an edge to the set, removing it if it already exists (since it would be internal).
+    private void AddEdge(HashSet<Edge> edges, Vector2 start, Vector2 end)
+    {
+        var edge = new Edge(start, end);
+
+        // If the edge is already in the set, remove it (since it's internal)
+        if (!edges.Add(edge))
+        {
+            edges.Remove(edge);
         }
     }
 
