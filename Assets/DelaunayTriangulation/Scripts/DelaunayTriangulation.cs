@@ -135,9 +135,21 @@ public class DelaunayTriangulation : MonoBehaviour
         List<Vector2> bounds = new List<Vector2>
         {
             new Vector2(1, 1),
+            new Vector2(0.5f, 1),
+            new Vector2(0, 1),
+            new Vector2(-0.5f, 1),
             new Vector2(-1, 1),
+            new Vector2(-1, 0.5f),
+            new Vector2(-1, 0),
+            new Vector2(-1, -0.5f),
             new Vector2(-1, -1),
+            new Vector2(-0.5f, -1),
+            new Vector2(0, -1),
+            new Vector2(0.5f, -1),
             new Vector2(1, -1),
+            new Vector2(1, -0.5f),
+            new Vector2(1, 0),
+            new Vector2(1, 0.5f),
         };
 
         // Scale bounds dynamically and add to points list for triangulation.
@@ -176,21 +188,11 @@ public class DelaunayTriangulation : MonoBehaviour
         }
     }
 
-    // Optional debugging to visualize the super triangle and points
+    //Optional debugging to visualize the super triangle and points
     private void OnDrawGizmos()
     {
         if (Application.isPlaying && points != null)
         {
-            Gizmos.color = Color.red;
-
-            Vector3 tA = new Vector3(superTriangle.A.x, 0, superTriangle.A.y);
-            Vector3 tB = new Vector3(superTriangle.B.x, 0, superTriangle.B.y);
-            Vector3 tC = new Vector3(superTriangle.C.x, 0, superTriangle.C.y);
-
-            Gizmos.DrawLine(tA, tB);
-            Gizmos.DrawLine(tB, tC);
-            Gizmos.DrawLine(tC, tA);
-
             // Visualize points within the simulation bound
             Gizmos.color = Color.red;
             foreach (Vector2 point in points)
