@@ -3,9 +3,26 @@ using UnityEngine;
 
 public class DelaunayTriangulation : MonoBehaviour
 {
+    public Vector2 minBound;
+    public Vector2 maxBound;
+
+    public int maxPointCount = 10;
+
     private List<Vector2> points = new List<Vector2>();
     private List<Triangle> triangles = new List<Triangle>();
     private Triangle superTriangle;
+
+    private void GeneratePoints()
+    {
+        for (int i = 0; i < maxPointCount; i++)
+        {
+            float x = Random.Range(minBound.x, maxBound.x);
+            float y = Random.Range(minBound.y, minBound.y);
+
+            Vector2 newPoint = new Vector2(x, y);
+            points.Add(newPoint);
+        }
+    }
 
     private Triangle GenerateSuperTriangle(
         float triangleScale,
@@ -115,6 +132,16 @@ public class DelaunayTriangulation : MonoBehaviour
         public override int GetHashCode()
         {
             return Start.GetHashCode() * End.GetHashCode();
+        }
+    }
+
+    //for debugging purpose only
+    private void OnDrawGizmos()
+    {
+        Gizmos.color = Color.green;
+        foreach (Vector2 bound in CreateSimulationBounds(new Vector2(minBound.x, maxBound.x)))
+        {
+            Gizmos.DrawSphere(new Vector3(bound.x, 0, bound.y), 0.2f);
         }
     }
 }
