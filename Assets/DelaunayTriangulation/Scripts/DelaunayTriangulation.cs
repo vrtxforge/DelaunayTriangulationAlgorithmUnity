@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ public class DelaunayTriangulation : MonoBehaviour
 
     private List<Vector2> points = new List<Vector2>();
     private List<Triangle> triangles = new List<Triangle>();
+    private List<Triangle> finalTriangles = new List<Triangle>();
     private Triangle superTriangle;
 
     public Vector2 simulationPosition;
@@ -30,11 +32,8 @@ public class DelaunayTriangulation : MonoBehaviour
         // Generate random points within the bounds
         GeneratePoints();
 
-        // Perform the triangulation
-        Triangulate();
-
-        // Draw resulting triangles
-        DrawTriangles();
+        // Start coroutine for visualization
+        StartCoroutine(TriangulateCoroutine());
     }
 
     private Triangle GenerateSuperTriangle(
@@ -43,38 +42,42 @@ public class DelaunayTriangulation : MonoBehaviour
         Vector2 triangleTransform
     )
     {
-        //initial value
         float direction = 1;
         float masterScale = boundScale * triangleScale;
 
-        //creating super triangle template
-        //right bottom
+        // Right bottom
         Vector2 a = new Vector2(
             -direction * masterScale + triangleTransform.x,
             -masterScale / 2 + triangleTransform.y
         );
 
-        //left bottom
+        // Left bottom
         Vector2 b = new Vector2(
             direction * masterScale + triangleTransform.x,
             -masterScale / 2 + triangleTransform.y
         );
 
-        //top
+        // Top
         Vector2 c = new Vector2(triangleTransform.x, triangleTransform.y + masterScale);
 
         return new Triangle(a, b, c);
     }
 
-    private void Triangulate()
+    private IEnumerator TriangulateCoroutine()
     {
         // Add the super triangle initially to contain all points
         triangles.Add(superTriangle);
 
-        // Insert each point (including bounds and random points) into the triangulation
+        // Insert each point one by one with a delay to visualize
         foreach (var point in points)
         {
             InsertPoint(point);
+
+            // Draw the current state of triangles
+            DrawTriangles(triangles, Color.yellow);
+
+            // Wait for visualization
+            yield return new WaitForSeconds(0.1f);
         }
 
         // Remove triangles that contain any vertex of the super triangle
@@ -83,6 +86,12 @@ public class DelaunayTriangulation : MonoBehaviour
             || triangle.Contains(superTriangle.B)
             || triangle.Contains(superTriangle.C)
         );
+
+        // Save the final triangles for continuous display
+        finalTriangles = new List<Triangle>(triangles);
+
+        // Clear the temporary triangles list
+        triangles.Clear();
     }
 
     private void InsertPoint(Vector2 point)
@@ -90,7 +99,7 @@ public class DelaunayTriangulation : MonoBehaviour
         List<Triangle> badTriangles = new List<Triangle>();
         HashSet<Edge> boundaryEdges = new HashSet<Edge>();
 
-        // Step 1: Find all "bad" triangles whose circumcircles contain the point.
+        // Find all "bad" triangles whose circumcircles contain the point
         foreach (var triangle in triangles)
         {
             if (triangle.IsPointInCircumcircle(point))
@@ -104,20 +113,19 @@ public class DelaunayTriangulation : MonoBehaviour
             }
         }
 
-        // Step 2: Remove bad triangles from the main list
+        // Remove bad triangles from the main list
         foreach (var badTriangle in badTriangles)
         {
             triangles.Remove(badTriangle);
         }
 
-        // Step 3: Create new triangles from the point to each boundary edge
+        // Create new triangles from the point to each boundary edge
         foreach (var edge in boundaryEdges)
         {
             triangles.Add(new Triangle(edge.Start, edge.End, point));
         }
     }
 
-    // Utility method to add an edge to the set, removing it if it already exists (since it would be internal).
     private void AddEdge(HashSet<Edge> edges, Vector2 start, Vector2 end)
     {
         var edge = new Edge(start, end);
@@ -129,7 +137,6 @@ public class DelaunayTriangulation : MonoBehaviour
         }
     }
 
-    // Modify this method to add bounds as points and allow them to be triangulated.
     private List<Vector2> CreateSimulationBounds(Vector2 scalar)
     {
         List<Vector2> bounds = new List<Vector2>
@@ -152,11 +159,11 @@ public class DelaunayTriangulation : MonoBehaviour
             new Vector2(1, 0.5f),
         };
 
-        // Scale bounds dynamically and add to points list for triangulation.
+        // Scale bounds dynamically and add to points list for triangulation
         for (int i = 0; i < bounds.Count; i++)
         {
             bounds[i] *= scalar;
-            points.Add(bounds[i]); // Add bounds directly to points for triangulation
+            points.Add(bounds[i]);
         }
 
         return bounds;
@@ -174,26 +181,32 @@ public class DelaunayTriangulation : MonoBehaviour
         }
     }
 
-    void DrawTriangles()
+    private void DrawTriangles(List<Triangle> trianglesToDraw, Color color)
     {
-        foreach (var triangle in triangles)
+        foreach (var triangle in trianglesToDraw)
         {
             Vector3 tA = new Vector3(triangle.A.x, 0, triangle.A.y);
             Vector3 tB = new Vector3(triangle.B.x, 0, triangle.B.y);
             Vector3 tC = new Vector3(triangle.C.x, 0, triangle.C.y);
 
-            Debug.DrawLine(tA, tB, Color.red, 100f);
-            Debug.DrawLine(tB, tC, Color.red, 100f);
-            Debug.DrawLine(tC, tA, Color.red, 100f);
+            Debug.DrawLine(tA, tB, color, 0.5f);
+            Debug.DrawLine(tB, tC, color, 0.5f);
+            Debug.DrawLine(tC, tA, color, 0.5f);
         }
     }
 
-    //Optional debugging to visualize the super triangle and points
+    private void Update()
+    {
+        if (finalTriangles.Count > 0)
+        {
+            DrawTriangles(finalTriangles, Color.red);
+        }
+    }
+
     private void OnDrawGizmos()
     {
         if (Application.isPlaying && points != null)
         {
-            // Visualize points within the simulation bound
             Gizmos.color = Color.red;
             foreach (Vector2 point in points)
             {

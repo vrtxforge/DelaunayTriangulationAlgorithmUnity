@@ -470,9 +470,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be97735d7a08320828d35938e655c979, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  minBound: {x: -10, y: -10}
-  maxBound: {x: 10, y: 10}
-  maxPointCount: 10
+  minBound: {x: -15, y: -15}
+  maxBound: {x: 15, y: 15}
+  maxPointCount: 50
   simulationPosition: {x: 0, y: 0}
   triangleScale: 5
 --- !u!1660057539 &9223372036854775807
