@@ -1,9 +1,9 @@
-# Delaunay Triangulation in Unity 6
+# Delaunay Triangulation in Unity
 
 ## Preview Demo
 ![Delaunay Triangulation Demo](https://github.com/vrtxforge/DelaunayTriangulationAlgorithm/blob/master/Previews/delaunay-preview.gif)
 
-This project implements Delaunay triangulation in Unity 6 using a coroutine-based simulation. It visualizes the triangulation process step-by-step, allowing for customizations through Unity Inspector parameters. This can be useful for understanding the mechanics of triangulation and is suitable for educational and experimental purposes in 2D computational geometry.
+This project implements Delaunay triangulation in Unity using a coroutine-based simulation. It visualizes the triangulation process step-by-step, allowing for customizations through Unity Inspector parameters. This can be useful for understanding the mechanics of triangulation and is suitable for educational and experimental purposes in 2D computational geometry.
 
 ## Important Notes
 - **In Development**: This project is still in development. Features may change, and improvements are ongoing.
@@ -16,15 +16,9 @@ This project implements Delaunay triangulation in Unity 6 using a coroutine-base
 - Provides controls over simulation speed, boundary size, and point count.
 - Displays the final triangulation result at the end of the simulation.
 
-## Requirements
-- Unity 6 (may work with later versions).
-
 ## Installation
 1. Download or clone this repository.
-2. Open the project in Unity or create a new Unity project and add the script files to the `Assets` folder.
-
-## Usage
-Attach the `DelaunayTriangulation` script to a GameObject in your Unity scene. Set the simulation parameters in the Unity Inspector as follows:
+2. The main default scene provide basic visualization of the triangulation but you could experiment by drag and drop DelaunayTriangulation class into a GameObject and hit play.
 
 ### Parameters
 - **minBound**: Minimum bound for random point generation within the simulation area.
@@ -49,6 +43,12 @@ Attach the `DelaunayTriangulation` script to a GameObject in your Unity scene. S
 2. Adjust parameters in the Inspector as desired.
 3. Play the scene to see the triangulation process in action.
 4. The final triangulated mesh is displayed in red once the simulation is complete.
+
+## TODO
+1. Add some mesh generation logic to create some sort of basic procedural terrain generation
+2. Adding some perlin noise to create some elevation map and alter the vertices elevations
+3. Create Constraint Delaunay Triangulation Algorithm to make boundary creation more dynamic
+
 
 ## Code Structure
 - **Start()**: Initializes the simulation, creates bounds, and starts the triangulation coroutine.
