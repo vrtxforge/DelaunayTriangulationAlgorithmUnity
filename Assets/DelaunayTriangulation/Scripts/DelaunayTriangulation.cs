@@ -4,14 +4,24 @@ using UnityEngine;
 
 public class DelaunayTriangulation : MonoBehaviour
 {
-    public Vector2 minBound;
-    public Vector2 maxBound;
+    [Header("Main Simulation Parameter")]
+    [Tooltip("Minimum bound for random point generation within the simulation area.")]
+    public float minBound;
 
-    public int maxPointCount = 10;
-    public float superTriangleScale = 3;
+    [Tooltip("Maximum bound for random point generation within the simulation area.")]
+    public float maxBound;
 
-    public Vector2 simulationPosition;
+    [Tooltip(
+        "Speed at which the simulation progresses, affecting delay between each point's insertion."
+    )]
     public float simulationSpeed = 0.1f;
+
+    [Space(10)]
+    [Tooltip("Maximum number of random points generated within the simulation area.")]
+    public int maxPointCount = 10;
+
+    [Tooltip("Scale of the super triangle used to contain all points during triangulation.")]
+    public float superTriangleScale = 3;
 
     private List<Vector2> points = new List<Vector2>();
     private List<Triangle> triangles = new List<Triangle>();
@@ -22,17 +32,13 @@ public class DelaunayTriangulation : MonoBehaviour
 
     private void Start()
     {
-        simulationScale = maxBound.x;
+        simulationScale = maxBound;
 
         // Generate super triangle
-        superTriangle = GenerateSuperTriangle(
-            superTriangleScale,
-            simulationScale,
-            simulationPosition
-        );
+        superTriangle = GenerateSuperTriangle(superTriangleScale, simulationScale);
 
         // Generate bounds and add them as points for triangulation
-        var bounds = CreateSimulationBounds(new Vector2(minBound.x, maxBound.x));
+        var bounds = CreateSimulationBounds(new Vector2(minBound, maxBound));
 
         // Generate random points within the bounds
         GeneratePoints();
@@ -41,29 +47,19 @@ public class DelaunayTriangulation : MonoBehaviour
         StartCoroutine(TriangulateCoroutine());
     }
 
-    private Triangle GenerateSuperTriangle(
-        float superTriangleScale,
-        float boundScale,
-        Vector2 triangleTransform
-    )
+    private Triangle GenerateSuperTriangle(float superTriangleScale, float boundScale)
     {
         float direction = 1;
         float masterScale = boundScale * superTriangleScale;
 
         // Right bottom
-        Vector2 a = new Vector2(
-            -direction * masterScale + triangleTransform.x,
-            -masterScale / 2 + triangleTransform.y
-        );
+        Vector2 a = new Vector2(-direction * masterScale, -masterScale / 2);
 
         // Left bottom
-        Vector2 b = new Vector2(
-            direction * masterScale + triangleTransform.x,
-            -masterScale / 2 + triangleTransform.y
-        );
+        Vector2 b = new Vector2(direction * masterScale, -masterScale / 2);
 
         // Top
-        Vector2 c = new Vector2(triangleTransform.x, triangleTransform.y + masterScale);
+        Vector2 c = new Vector2(0, masterScale);
 
         return new Triangle(a, b, c);
     }
@@ -178,8 +174,8 @@ public class DelaunayTriangulation : MonoBehaviour
     {
         for (int i = 0; i < maxPointCount; i++)
         {
-            float x = Random.Range(minBound.x, maxBound.x);
-            float y = Random.Range(minBound.y, maxBound.y);
+            float x = Random.Range(minBound, maxBound);
+            float y = Random.Range(minBound, maxBound);
 
             Vector2 newPoint = new Vector2(x, y);
             points.Add(newPoint);
