@@ -8,14 +8,15 @@ public class DelaunayTriangulation : MonoBehaviour
     public Vector2 maxBound;
 
     public int maxPointCount = 10;
+    public float superTriangleScale = 3;
+
+    public Vector2 simulationPosition;
+    public float simulationSpeed = 0.1f;
 
     private List<Vector2> points = new List<Vector2>();
     private List<Triangle> triangles = new List<Triangle>();
     private List<Triangle> finalTriangles = new List<Triangle>();
     private Triangle superTriangle;
-
-    public Vector2 simulationPosition;
-    public float triangleScale = 3;
 
     private float simulationScale;
 
@@ -24,7 +25,11 @@ public class DelaunayTriangulation : MonoBehaviour
         simulationScale = maxBound.x;
 
         // Generate super triangle
-        superTriangle = GenerateSuperTriangle(triangleScale, simulationScale, simulationPosition);
+        superTriangle = GenerateSuperTriangle(
+            superTriangleScale,
+            simulationScale,
+            simulationPosition
+        );
 
         // Generate bounds and add them as points for triangulation
         var bounds = CreateSimulationBounds(new Vector2(minBound.x, maxBound.x));
@@ -37,13 +42,13 @@ public class DelaunayTriangulation : MonoBehaviour
     }
 
     private Triangle GenerateSuperTriangle(
-        float triangleScale,
+        float superTriangleScale,
         float boundScale,
         Vector2 triangleTransform
     )
     {
         float direction = 1;
-        float masterScale = boundScale * triangleScale;
+        float masterScale = boundScale * superTriangleScale;
 
         // Right bottom
         Vector2 a = new Vector2(
@@ -77,7 +82,7 @@ public class DelaunayTriangulation : MonoBehaviour
             DrawTriangles(triangles, Color.yellow);
 
             // Wait for visualization
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(simulationSpeed);
         }
 
         // Remove triangles that contain any vertex of the super triangle
