@@ -1,9 +1,10 @@
 # Delaunay Triangulation in Unity 6
 
 ## Video Demo
-Check out this video demonstration of the Delaunay triangulation process in Unity:
-
-[![Delaunay Triangulation Video](https://img.youtube.com/vi/fm7LWlj6hrE/0.jpg)](https://github.com/vrtxforge/DelaunayTriangulationAlgorithm/blob/master/VideoExamples/delaunay-vrtxforge.mp4)
+<video width="320" height="240" controls autoplay loop>
+  <source src="https://github.com/vrtxforge/DelaunayTriangulationAlgorithm/blob/master/VideoExamples/delaunay-vrtxforge.mp4?raw=true" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 This project implements Delaunay triangulation in Unity 6 using a coroutine-based simulation. It visualizes the triangulation process step-by-step, allowing for customizations through Unity Inspector parameters. This can be useful for understanding the mechanics of triangulation and is suitable for educational and experimental purposes in 2D computational geometry.
 
@@ -69,3 +70,4 @@ Main Simulation Parameter
 
 Max Point Count: 15
 Super Triangle Scale: 3
+
