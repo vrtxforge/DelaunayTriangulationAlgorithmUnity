@@ -18,7 +18,7 @@ This project implements Delaunay triangulation in Unity using a coroutine-based 
 
 ## Installation
 1. Download or clone this repository.
-2. The main default scene provide basic visualization of the triangulation but you could experiment by drag and drop DelaunayTriangulation class into a GameObject and hit play.
+2. Open Default Scene(if not yet open) - The main default scene provide basic visualization of the triangulation but you could experiment by drag and drop DelaunayTriangulation class into a GameObject and hit play.
 
 ### Parameters
 - **minBound**: Minimum bound for random point generation within the simulation area.
