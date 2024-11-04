@@ -423,10 +423,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   minBound: -10
   maxBound: 10
-  maxPointCount: 50
-  superTriangleScale: 3
-  simulationPosition: {x: 0, y: 0}
   simulationSpeed: 0.1
+  maxPointCount: 60
+  superTriangleScale: 3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

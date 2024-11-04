@@ -1,6 +1,11 @@
-# Delaunay Triangulation in Unity
+# Delaunay Triangulation in Unity 6
 
-This project implements Delaunay triangulation in Unity using a coroutine-based simulation. It visualizes the triangulation process step-by-step, allowing for customizations through Unity Inspector parameters. This can be useful for understanding the mechanics of triangulation and is suitable for educational and experimental purposes in 2D computational geometry.
+This project implements Delaunay triangulation in Unity 6 using a coroutine-based simulation. It visualizes the triangulation process step-by-step, allowing for customizations through Unity Inspector parameters. This can be useful for understanding the mechanics of triangulation and is suitable for educational and experimental purposes in 2D computational geometry.
+
+## Important Notes
+- **In Development**: This project is still in development. Features may change, and improvements are ongoing.
+- **Boundary Limitations**: The simulation is currently limited to a perfect square boundary (or any simple shape without concaves). Future versions may support more complex shapes.
+- **Basic Visualization**: The Delaunay triangulation visualization is basic and primarily serves educational purposes. Further enhancements may be added to improve visual clarity and user interaction.
 
 ## Features
 - Generates a set of random points within specified bounds and triangulates them.
@@ -9,7 +14,7 @@ This project implements Delaunay triangulation in Unity using a coroutine-based 
 - Displays the final triangulation result at the end of the simulation.
 
 ## Requirements
-- Unity 2020.3 or later (might work with earlier versions but not guaranteed).
+- Unity 6 (may work with later versions).
 
 ## Installation
 1. Download or clone this repository.
@@ -59,4 +64,3 @@ Main Simulation Parameter
 
 Max Point Count: 15
 Super Triangle Scale: 3
-
