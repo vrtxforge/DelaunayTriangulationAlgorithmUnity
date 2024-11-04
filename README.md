@@ -49,7 +49,6 @@ This project implements Delaunay triangulation in Unity using a coroutine-based 
 2. Adding some perlin noise to create some elevation map and alter the vertices elevations
 3. Create Constraint Delaunay Triangulation Algorithm to make boundary creation more dynamic
 
-
 ## Code Structure
 - **Start()**: Initializes the simulation, creates bounds, and starts the triangulation coroutine.
 - **GenerateSuperTriangle()**: Creates the initial super triangle to enclose all points.
@@ -57,6 +56,11 @@ This project implements Delaunay triangulation in Unity using a coroutine-based 
 - **InsertPoint()**: Handles point insertion and triangle adjustment based on Delaunay conditions.
 - **DrawTriangles()**: Visualizes triangles in the scene using `Debug.DrawLine`.
 - **OnDrawGizmos()**: Displays points as red spheres in the Scene view.
+
+## TODO
+1. Add some mesh generation logic to create some sort of basic procedural terrain generation
+2. Adding some perlin noise to create some elevation map and alter the vertices elevations
+3. Create Constraint Delaunay Triangulation Algorithm to make boundary creation more dynamic
 
 ## Example Inspector Settings
 ```plaintext
