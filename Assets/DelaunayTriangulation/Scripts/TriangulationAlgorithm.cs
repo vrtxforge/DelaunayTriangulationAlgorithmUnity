@@ -17,11 +17,14 @@ public abstract class TriangulationAlgorithm : MonoBehaviour
     protected Triangle superTriangle;
     protected float simulationScale;
 
-    protected virtual void Start()
+    public virtual void Start(bool autoGeneratePoints = true)
     {
         simulationScale = maxBound;
         superTriangle = GenerateSuperTriangle(superTriangleScale, simulationScale);
-        GeneratePoints();
+        if (autoGeneratePoints)
+        {
+            GeneratePoints();
+        }
         StartCoroutine(TriangulateCoroutine());
     }
 
