@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class TriangulationAlgorithm : MonoBehaviour
+public class TriangulationAlgorithm : MonoBehaviour
 {
     [Header("Main Simulation Parameters")]
     public float minBound;
@@ -17,7 +17,7 @@ public abstract class TriangulationAlgorithm : MonoBehaviour
     protected Triangle superTriangle;
     protected float simulationScale;
 
-    public virtual void Start(bool autoGeneratePoints = true)
+    public void InitiateVariables(bool autoGeneratePoints = false)
     {
         simulationScale = maxBound;
         superTriangle = GenerateSuperTriangle(superTriangleScale, simulationScale);
@@ -25,10 +25,12 @@ public abstract class TriangulationAlgorithm : MonoBehaviour
         {
             GeneratePoints();
         }
-        StartCoroutine(TriangulateCoroutine());
     }
 
-    protected abstract IEnumerator TriangulateCoroutine();
+    public virtual IEnumerator TriangulateCoroutine()
+    {
+        yield return null;
+    }
 
     protected virtual Triangle GenerateSuperTriangle(float superTriangleScale, float boundScale)
     {

@@ -2,97 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DelaunayTriangulation : MonoBehaviour
+public class DelaunayTriangulation : TriangulationAlgorithm
 {
-    [Header("Main Simulation Parameter")]
-    [Tooltip("Minimum bound for random point generation within the simulation area.")]
-    public float minBound;
-
-    [Tooltip("Maximum bound for random point generation within the simulation area.")]
-    public float maxBound;
-
-    [Tooltip(
-        "Speed at which the simulation progresses, affecting delay between each point's insertion."
-    )]
-    public float simulationSpeed = 0.1f;
-
-    [Space(10)]
-    [Tooltip("Maximum number of random points generated within the simulation area.")]
-    public int maxPointCount = 10;
-
-    [Tooltip("Scale of the super triangle used to contain all points during triangulation.")]
-    public float superTriangleScale = 3;
-
-    private List<Vector2> points = new List<Vector2>();
-    private List<Triangle> triangles = new List<Triangle>();
-    private List<Triangle> finalTriangles = new List<Triangle>();
-    private Triangle superTriangle;
-
-    private float simulationScale;
-
-    private void Start()
+    public virtual void Start()
     {
-        simulationScale = maxBound;
-
-        // Generate super triangle
-        superTriangle = GenerateSuperTriangle(superTriangleScale, simulationScale);
-
-        // Generate bounds and add them as points for triangulation
         var bounds = CreateSimulationBounds(new Vector2(minBound, maxBound));
+        InitiateVariables(true);
 
-        // Generate random points within the bounds
-        GeneratePoints();
-
-        // Start coroutine for visualization
         StartCoroutine(TriangulateCoroutine());
-    }
-
-    private Triangle GenerateSuperTriangle(float superTriangleScale, float boundScale)
-    {
-        float direction = 1;
-        float masterScale = boundScale * superTriangleScale;
-
-        // Right bottom
-        Vector2 a = new Vector2(-direction * masterScale, -masterScale / 2);
-
-        // Left bottom
-        Vector2 b = new Vector2(direction * masterScale, -masterScale / 2);
-
-        // Top
-        Vector2 c = new Vector2(0, masterScale);
-
-        return new Triangle(a, b, c);
-    }
-
-    private IEnumerator TriangulateCoroutine()
-    {
-        // Add the super triangle initially to contain all points
-        triangles.Add(superTriangle);
-
-        // Insert each point one by one with a delay to visualize
-        foreach (var point in points)
-        {
-            InsertPoint(point);
-
-            // Draw the current state of triangles
-            DrawTriangles(triangles, Color.yellow);
-
-            // Wait for visualization
-            yield return new WaitForSeconds(simulationSpeed);
-        }
-
-        // Remove triangles that contain any vertex of the super triangle
-        triangles.RemoveAll(triangle =>
-            triangle.Contains(superTriangle.A)
-            || triangle.Contains(superTriangle.B)
-            || triangle.Contains(superTriangle.C)
-        );
-
-        // Save the final triangles for continuous display
-        finalTriangles = new List<Triangle>(triangles);
-
-        // Clear the temporary triangles list
-        triangles.Clear();
     }
 
     private void InsertPoint(Vector2 point)
@@ -138,6 +55,37 @@ public class DelaunayTriangulation : MonoBehaviour
         }
     }
 
+    public override IEnumerator TriangulateCoroutine()
+    {
+        // Add the super triangle initially to contain all points
+        triangles.Add(superTriangle);
+
+        // Insert each point one by one with a delay to visualize
+        foreach (var point in points)
+        {
+            InsertPoint(point);
+
+            // Draw the current state of triangles
+            DrawTriangles(triangles, Color.yellow);
+
+            // Wait for visualization
+            yield return new WaitForSeconds(simulationSpeed);
+        }
+
+        // Remove triangles that contain any vertex of the super triangle
+        triangles.RemoveAll(triangle =>
+            triangle.Contains(superTriangle.A)
+            || triangle.Contains(superTriangle.B)
+            || triangle.Contains(superTriangle.C)
+        );
+
+        // Save the final triangles for continuous display
+        finalTriangles = new List<Triangle>(triangles);
+
+        // Clear the temporary triangles list
+        triangles.Clear();
+    }
+
     private List<Vector2> CreateSimulationBounds(Vector2 scalar)
     {
         List<Vector2> bounds = new List<Vector2>
@@ -168,32 +116,6 @@ public class DelaunayTriangulation : MonoBehaviour
         }
 
         return bounds;
-    }
-
-    private void GeneratePoints()
-    {
-        for (int i = 0; i < maxPointCount; i++)
-        {
-            float x = Random.Range(minBound, maxBound);
-            float y = Random.Range(minBound, maxBound);
-
-            Vector2 newPoint = new Vector2(x, y);
-            points.Add(newPoint);
-        }
-    }
-
-    private void DrawTriangles(List<Triangle> trianglesToDraw, Color color)
-    {
-        foreach (var triangle in trianglesToDraw)
-        {
-            Vector3 tA = new Vector3(triangle.A.x, 0, triangle.A.y);
-            Vector3 tB = new Vector3(triangle.B.x, 0, triangle.B.y);
-            Vector3 tC = new Vector3(triangle.C.x, 0, triangle.C.y);
-
-            Debug.DrawLine(tA, tB, color, 0.5f);
-            Debug.DrawLine(tB, tC, color, 0.5f);
-            Debug.DrawLine(tC, tA, color, 0.5f);
-        }
     }
 
     private void Update()

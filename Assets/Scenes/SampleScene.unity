@@ -387,7 +387,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1435566617}
   - component: {fileID: 1435566618}
-  - component: {fileID: 1435566619}
   m_Layer: 0
   m_Name: DelaunaySimulation
   m_TagString: Untagged
@@ -417,26 +416,9 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1435566616}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: be97735d7a08320828d35938e655c979, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  minBound: -10
-  maxBound: 10
-  simulationSpeed: 0.1
-  maxPointCount: 60
-  superTriangleScale: 3
---- !u!114 &1435566619
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1435566616}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 631d7af03a0fdca4097cb71f237e3d2f, type: 3}
+  m_Script: {fileID: 11500000, guid: be97735d7a08320828d35938e655c979, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   minBound: -10
