@@ -2,24 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ConstrainedDelaunayTriangulation : MonoBehaviour
+public class ConstrainedDelaunayTriangulation : TriangulationAlgorithm
 {
-    [Header("Main Simulation Parameters")]
-    public float minBound;
-    public float maxBound;
-    public float simulationSpeed = 0.1f;
-    public int maxPointCount = 10;
-    public float superTriangleScale = 3;
-
-    protected List<Vector2> points = new();
-    protected List<Triangle> triangles = new List<Triangle>();
-    protected List<Triangle> finalTriangles = new List<Triangle>();
-    protected Triangle superTriangle;
-    protected float simulationScale;
     public List<Edge> constraints = new List<Edge>();
+
+    private List<Edge> boundaryEdges = new List<Edge>();
 
     public void Start()
     {
+        InitiateVariables();
         // Define the points for the "L" shape
         points = new List<Vector2>
         {
@@ -46,24 +37,43 @@ public class ConstrainedDelaunayTriangulation : MonoBehaviour
         StartCoroutine(TriangulateCoroutine());
     }
 
-    protected IEnumerator TriangulateCoroutine()
+    private void Update()
     {
+        // Draw final triangles after simulation
+        if (finalTriangles.Count > 0)
+        {
+            DrawTriangles(finalTriangles, Color.red);
+        }
+    }
+
+    public override IEnumerator TriangulateCoroutine()
+    {
+        // Add the super triangle initially to contain all points
         triangles.Add(superTriangle);
 
+        // Insert each point one by one with a delay to visualize
         foreach (var point in points)
         {
-            InsertPointWithConstraints(point);
-            DrawTriangles(triangles, Color.blue);
+            InsertPointRespectingBoundary(point);
+
+            // Draw the current state of triangles
+            DrawTriangles(triangles, Color.yellow);
+
+            // Wait for visualization
             yield return new WaitForSeconds(simulationSpeed);
         }
 
+        // Remove triangles that contain any vertex of the super triangle
         triangles.RemoveAll(triangle =>
             triangle.Contains(superTriangle.A)
             || triangle.Contains(superTriangle.B)
             || triangle.Contains(superTriangle.C)
         );
 
+        // Save the final triangles for continuous display
         finalTriangles = new List<Triangle>(triangles);
+
+        // Clear the temporary triangles list
         triangles.Clear();
     }
 
@@ -72,27 +82,117 @@ public class ConstrainedDelaunayTriangulation : MonoBehaviour
         List<Triangle> badTriangles = new List<Triangle>();
         HashSet<Edge> boundaryEdges = new HashSet<Edge>();
 
+        // Find all "bad" triangles whose circumcircles contain the point
         foreach (var triangle in triangles)
         {
             if (triangle.IsPointInCircumcircle(point))
             {
                 badTriangles.Add(triangle);
-                AddEdgeWithConstraints(boundaryEdges, triangle.A, triangle.B);
-                AddEdgeWithConstraints(boundaryEdges, triangle.B, triangle.C);
-                AddEdgeWithConstraints(boundaryEdges, triangle.C, triangle.A);
+
+                // Add edges of the bad triangle, potentially creating boundary edges
+                AddEdge(boundaryEdges, triangle.A, triangle.B);
+                AddEdge(boundaryEdges, triangle.B, triangle.C);
+                AddEdge(boundaryEdges, triangle.C, triangle.A);
             }
         }
 
+        // Remove bad triangles from the main list
         foreach (var badTriangle in badTriangles)
         {
             triangles.Remove(badTriangle);
         }
 
+        // Now ensure we respect constraints on the edges
+        // Check the boundary edges and prevent crossing the constraints
         foreach (var edge in boundaryEdges)
         {
-            if (!IsConstraintEdge(edge))
+            if (!IsConstrainedEdge(edge)) // Ensure it's part of your L-shape boundary
             {
                 triangles.Add(new Triangle(edge.Start, edge.End, point));
+            }
+        }
+    }
+
+    private void InsertPointRespectingBoundary(Vector2 point)
+    {
+        List<Triangle> badTriangles = new List<Triangle>();
+        HashSet<Edge> boundaryEdgesToAdd = new HashSet<Edge>();
+
+        // Find all "bad" triangles whose circumcircles contain the point
+        foreach (var triangle in triangles)
+        {
+            if (triangle.IsPointInCircumcircle(point))
+            {
+                bool isBoundaryTriangle = false;
+
+                // Check if any edge of the triangle is part of the boundary
+                if (IsBoundaryTriangle(triangle))
+                {
+                    isBoundaryTriangle = true;
+                }
+
+                if (!isBoundaryTriangle)
+                {
+                    badTriangles.Add(triangle);
+
+                    // Add edges of the bad triangle, potentially creating boundary edges
+                    AddEdge(boundaryEdgesToAdd, triangle.A, triangle.B);
+                    AddEdge(boundaryEdgesToAdd, triangle.B, triangle.C);
+                    AddEdge(boundaryEdgesToAdd, triangle.C, triangle.A);
+                }
+            }
+        }
+
+        // Remove bad triangles from the main list
+        foreach (var badTriangle in badTriangles)
+        {
+            triangles.Remove(badTriangle);
+        }
+
+        // Add new triangles from boundary edges to the point
+        foreach (var edge in boundaryEdgesToAdd)
+        {
+            if (!IsConstrainedEdge(edge))
+            {
+                triangles.Add(new Triangle(edge.Start, edge.End, point));
+            }
+        }
+    }
+
+    private bool IsBoundaryTriangle(Triangle triangle)
+    {
+        // Check if the triangle shares any edge with the boundary
+        return boundaryEdges.Contains(new Edge(triangle.A, triangle.B))
+            || boundaryEdges.Contains(new Edge(triangle.B, triangle.C))
+            || boundaryEdges.Contains(new Edge(triangle.C, triangle.A));
+    }
+
+    private bool IsConstrainedEdge(Edge edge)
+    {
+        // Check if the edge is part of your L-shaped boundary (you may hardcode this logic based on your boundary)
+        // For example, you can check if the edge matches one of the boundary edges
+        return boundaryEdges.Contains(edge);
+    }
+
+    private void AddEdge(HashSet<Edge> edges, Vector2 start, Vector2 end)
+    {
+        var edge = new Edge(start, end);
+
+        // If the edge is a constrained edge (part of the boundary), do not allow flipping
+        if (IsConstrainedEdge(edge))
+        {
+            // Simply add it, since it's part of the boundary
+            if (!edges.Add(edge))
+            {
+                edges.Remove(edge); // Remove if it's already added (internal edge)
+            }
+        }
+        else
+        {
+            // If it's not constrained, handle it normally
+            if (!edges.Add(edge))
+            {
+                edges.Remove(edge); // Remove if it's already added (internal edge)
             }
         }
     }
@@ -104,16 +204,46 @@ public class ConstrainedDelaunayTriangulation : MonoBehaviour
             edges.Remove(edge);
     }
 
-    private bool IsConstraintEdge(Edge edge)
+    private List<Vector2> CreateSimulationBounds(Vector2 scalar)
     {
-        foreach (var constraint in constraints)
+        List<Vector2> bounds = new List<Vector2>
         {
-            if (edge.Equals(constraint) || DoEdgesIntersect(edge, constraint))
+            new Vector2(1, 1),
+            new Vector2(0.5f, 1),
+            new Vector2(0, 1),
+            new Vector2(-0.5f, 1),
+            new Vector2(-1, 1),
+            new Vector2(-1, 0.5f),
+            new Vector2(-1, 0),
+            new Vector2(-1, -0.5f),
+            new Vector2(-1, -1),
+            new Vector2(-0.5f, -1),
+            new Vector2(0, -1),
+            new Vector2(0.5f, -1),
+            new Vector2(1, -1),
+            new Vector2(1, -0.5f),
+            new Vector2(1, 0),
+            new Vector2(1, 0.5f),
+        };
+
+        // Scale bounds dynamically and add to points list for triangulation
+        for (int i = 0; i < bounds.Count; i++)
+        {
+            bounds[i] *= scalar;
+            points.Add(bounds[i]);
+
+            // Store the edges of the boundary explicitly
+            if (i < bounds.Count - 1)
             {
-                return true;
+                boundaryEdges.Add(new Edge(bounds[i], bounds[i + 1]));
+            }
+            else
+            {
+                boundaryEdges.Add(new Edge(bounds[i], bounds[0])); // Close the boundary loop
             }
         }
-        return false;
+
+        return bounds;
     }
 
     private bool DoEdgesIntersect(Edge edge1, Edge edge2)
@@ -167,35 +297,25 @@ public class ConstrainedDelaunayTriangulation : MonoBehaviour
             && q.y >= Mathf.Min(p.y, r.y);
     }
 
-    protected virtual Triangle GenerateSuperTriangle(float superTriangleScale, float boundScale)
+    private void OnDrawGizmos()
     {
-        float masterScale = boundScale * superTriangleScale;
-        Vector2 a = new Vector2(-masterScale, -masterScale / 2);
-        Vector2 b = new Vector2(masterScale, -masterScale / 2);
-        Vector2 c = new Vector2(0, masterScale);
-        return new Triangle(a, b, c);
-    }
-
-    protected virtual void GeneratePoints()
-    {
-        for (int i = 0; i < maxPointCount; i++)
+        if (Application.isPlaying && points != null)
         {
-            float x = Random.Range(minBound, maxBound);
-            float y = Random.Range(minBound, maxBound);
-            points.Add(new Vector2(x, y));
-        }
-    }
+            Gizmos.color = Color.red;
+            foreach (Vector2 point in points)
+            {
+                Gizmos.DrawSphere(new Vector3(point.x, 0, point.y), 0.2f);
+            }
 
-    protected virtual void DrawTriangles(List<Triangle> trianglesToDraw, Color color)
-    {
-        foreach (var triangle in trianglesToDraw)
-        {
-            Vector3 tA = new Vector3(triangle.A.x, 0, triangle.A.y);
-            Vector3 tB = new Vector3(triangle.B.x, 0, triangle.B.y);
-            Vector3 tC = new Vector3(triangle.C.x, 0, triangle.C.y);
-            Debug.DrawLine(tA, tB, color, 0.5f);
-            Debug.DrawLine(tB, tC, color, 0.5f);
-            Debug.DrawLine(tC, tA, color, 0.5f);
+            // Draw the boundary explicitly
+            Gizmos.color = Color.blue; // Or any color you prefer
+            foreach (var edge in boundaryEdges)
+            {
+                Gizmos.DrawLine(
+                    new Vector3(edge.Start.x, 0, edge.Start.y),
+                    new Vector3(edge.End.x, 0, edge.End.y)
+                );
+            }
         }
     }
 }
